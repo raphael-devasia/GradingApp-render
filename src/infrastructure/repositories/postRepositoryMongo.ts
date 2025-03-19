@@ -26,10 +26,10 @@ export class PostRepositoryMongo implements IIPostRepository {
             throw new Error("Failed to save the post")
         }
     }
-    async findById(id: string): Promise<IPost | null> {
+    async findById(postId: string): Promise<IPost | null> {
         try {
             // Assuming you are using a database query or service call to fetch the post by ID
-            const post = await Post.findById(id)
+            const post = await Post.findById(postId)
             if (!post) {
                 console.log("Post not found")
                 return null // If the post is not found, return null
@@ -44,17 +44,7 @@ export class PostRepositoryMongo implements IIPostRepository {
             throw new Error("Error fetching post.") // Re-throw or handle the error as needed
         }
     }
-    // async getAll(userId: string): Promise<IPost[]> {
-    //     try {
-    //         console.log("Getting all posts for user:", userId)
-    //         // Fetch posts filtered by userId
-    //         const posts = await Post.find({ userId: userId })
-    //         return posts
-    //     } catch (error: any) {
-    //         console.error("Error fetching posts:", error.message) // Log the error for debugging
-    //         throw new Error("Failed to fetch posts. Please try again later.") // Throw a user-friendly error message
-    //     }
-    // }
+
     async getAllUserPosts(userId: string): Promise<IPost[]> {
         try {
             // Fetch posts filtered by userId
@@ -85,38 +75,41 @@ export class PostRepositoryMongo implements IIPostRepository {
         }
     }
     async getAllPosts(): Promise<IPost[]> {
-         try {
-             // Fetch posts filtered by userId
-             const posts = await Post.find()
-                 .populate({
-                     path: "userId", // Field in Post schema referencing User
-                     select: "firstName lastName", // Only fetch these fields
-                 })
-                 .exec()
-             // Map posts to include firstName and lastName directly in the object
-             const enrichedPosts = posts.map((post) => {
-                 const populatedUser = post.userId as {
-                     firstName: string
-                     lastName: string
-                 } // Type assertion
-                 return {
-                     ...post.toObject(),
-                     firstName: populatedUser.firstName || "Unknown",
-                     lastName: populatedUser.lastName || "User",
-                 }
-             })
+        try {
+            // Fetch posts filtered by userId
+            const posts = await Post.find()
+                .populate({
+                    path: "userId", // Field in Post schema referencing User
+                    select: "firstName lastName", // Only fetch these fields
+                })
+                .exec()
+            // Map posts to include firstName and lastName directly in the object
+            const enrichedPosts = posts.map((post) => {
+                const populatedUser = post.userId as {
+                    firstName: string
+                    lastName: string
+                } // Type assertion
+                return {
+                    ...post.toObject(),
+                    firstName: populatedUser.firstName || "Unknown",
+                    lastName: populatedUser.lastName || "User",
+                }
+            })
 
-             console.log("Fetched Posts:", enrichedPosts)
-             return enrichedPosts
-         } catch (error: any) {
-             console.error("Error fetching posts:", error.message) // Log the error for debugging
-             throw new Error("Failed to fetch posts. Please try again later.") // Throw a user-friendly error message
-         }
+            console.log("Fetched Posts:", enrichedPosts)
+            return enrichedPosts
+        } catch (error: any) {
+            console.error("Error fetching posts:", error.message) // Log the error for debugging
+            throw new Error("Failed to fetch posts. Please try again later.") // Throw a user-friendly error message
+        }
     }
-    async update(id: string, iPosIPost: Partial<IPost>): Promise<IPost | null> {
+    async update(
+        postId: string,
+        iPosIPost: Partial<IPost>
+    ): Promise<IPost | null> {
         try {
             // Find the post by its ID
-            const post = await Post.findById(id) // Assuming `postModel` is your model for accessing the database
+            const post = await Post.findById(postId) // Assuming `postModel` is your model for accessing the database
 
             // If the post does not exist, return null
             if (!post) {
@@ -125,9 +118,13 @@ export class PostRepositoryMongo implements IIPostRepository {
             }
 
             // Update the post with the provided data (iPosIPost)
-            const updatedPost = await Post.findByIdAndUpdate(id, iPosIPost, {
-                new: true,
-            })
+            const updatedPost = await Post.findByIdAndUpdate(
+                postId,
+                iPosIPost,
+                {
+                    new: true,
+                }
+            )
 
             // Return the updated post
             return updatedPost
@@ -137,12 +134,15 @@ export class PostRepositoryMongo implements IIPostRepository {
             throw new Error("Failed to update the post")
         }
     }
-    async patch(id: string, iPosIPost: Partial<IPost>): Promise<IPost | null> {
+    async patch(
+        postId: string,
+        iPosIPost: Partial<IPost>
+    ): Promise<IPost | null> {
         console.log(iPosIPost)
 
         try {
             // Find the post by its ID
-            const post = await Post.findById(id) // Assuming `postModel` is your model for accessing the database
+            const post = await Post.findById(postId) // Assuming `postModel` is your model for accessing the database
 
             // If the post does not exist, return null
             if (!post) {
@@ -151,9 +151,13 @@ export class PostRepositoryMongo implements IIPostRepository {
             }
 
             // Update the post with the provided data (iPosIPost)
-            const updatedPost = await Post.findByIdAndUpdate(id, iPosIPost, {
-                new: true,
-            })
+            const updatedPost = await Post.findByIdAndUpdate(
+                postId,
+                iPosIPost,
+                {
+                    new: true,
+                }
+            )
             console.log(updatedPost)
             // Return the updated post
             return updatedPost
@@ -163,15 +167,15 @@ export class PostRepositoryMongo implements IIPostRepository {
             throw new Error("Failed to update the post")
         }
     }
-    async delete(id: string): Promise<boolean> {
+    async delete(postId: string): Promise<boolean> {
         try {
-            const result = await Post.findByIdAndDelete(id)
+            const result = await Post.findByIdAndDelete(postId)
 
             if (result) {
-                console.log(`Successfully deleted item with ID: ${id}`)
+                console.log(`Successfully deleted item with ID: ${postId}`)
                 return true
             } else {
-                throw new Error(`No item found with ID: ${id}`)
+                throw new Error(`No item found with ID: ${postId}`)
             }
         } catch (error) {
             throw error // Re-throwing the error for further handling

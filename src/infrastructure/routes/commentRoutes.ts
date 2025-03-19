@@ -16,7 +16,7 @@ router.get("/:postId", (req, res) =>
 router.get("/all/:userId", (req, res) =>
     commentController.getCommentsByUserId(req, res)
 ) // Get all comments on a user
-router.delete("/:id", authorize, (req, res) =>
+router.delete("/:commentId", authorize, (req, res) =>
     commentController.deleteComment(req, res)
 ) // Delete comment by ID
 

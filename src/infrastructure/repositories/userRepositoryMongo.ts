@@ -28,19 +28,8 @@ export class UserRepositoryMongo implements IUserRepository {
         }
     }
 
-    findById(id: string): Promise<IUser | null> {
-        throw new Error("Method not implemented.")
-    }
-
-    update(id: string, iUIUser: Partial<IUser>): Promise<IUser | null> {
-        throw new Error("Method not implemented.")
-    }
-    delete(id: string): Promise<boolean> {
-        throw new Error("Method not implemented.")
-    }
-    getAll(): Promise<IUser[]> {
-        throw new Error("Method not implemented.")
-    }
+   
+    
     async login(email: string, password: string): Promise<IUser | null> {
         try {
             // Find user by email

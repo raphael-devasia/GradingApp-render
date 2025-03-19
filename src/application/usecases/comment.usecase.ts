@@ -5,28 +5,28 @@ export class CommentUseCase {
     constructor(private commentRepository: ICommentRepository) {}
 
     async createComment(commentData: IComment): Promise<IComment> {
-        return this.commentRepository.create(commentData)
+        return this.commentRepository.createComment(commentData)
     }
 
-    async getCommentById(id: string): Promise<IComment | null> {
-        return this.commentRepository.findById(id)
+    async getCommentById(commentId: string): Promise<IComment | null> {
+        return this.commentRepository.findCommentById(commentId)
     }
     async getCommentByUserId(userId: string): Promise<IComment[]> {
-        return this.commentRepository.findByUserId(userId)
+        return this.commentRepository.findCommentByUserId(userId)
     }
 
     async getAllCommentsByPost(postId: string): Promise<IComment[]> {
-        return this.commentRepository.getAllByPost(postId)
+        return this.commentRepository.getAllCommentByPost(postId)
     }
 
     async updateComment(
-        id: string,
+        commentId: string,
         commentData: Partial<IComment>
     ): Promise<IComment | null> {
-        return this.commentRepository.update(id, commentData)
+        return this.commentRepository.updateComment(commentId, commentData)
     }
 
-    async deleteComment(id: string): Promise<boolean> {
-        return this.commentRepository.delete(id)
+    async deleteComment(commentId: string): Promise<boolean> {
+        return this.commentRepository.deleteComment(commentId)
     }
 }

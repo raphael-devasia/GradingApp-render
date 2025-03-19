@@ -24,28 +24,10 @@ export class UserUseCase {
         return this.userRepository.create(userData)
     }
 
-    async getUserById(id: string): Promise<IUser | null> {
-        return this.userRepository.findById(id)
-    }
-
     async getUserByEmail(email: string): Promise<IUser | null> {
         return this.userRepository.findByEmail(email)
     }
 
-    async updateUser(
-        id: string,
-        userData: Partial<IUser>
-    ): Promise<IUser | null> {
-        return this.userRepository.update(id, userData)
-    }
-
-    async deleteUser(id: string): Promise<boolean> {
-        return this.userRepository.delete(id)
-    }
-
-    async getAllUsers(): Promise<IUser[]> {
-        return this.userRepository.getAll()
-    }
     async login(email: string, password: string): Promise<ILoginResponse> {
         // Find user by email
         const user = await this.userRepository.login(email, password)

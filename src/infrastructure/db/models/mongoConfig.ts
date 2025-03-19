@@ -2,8 +2,7 @@ import mongoose from "mongoose"
 import * as dotenv from "dotenv"
 dotenv.config()
 
-// MongoDB connection URL
-// const MONGO_URI = process.env.MONGO_URI || "mongodb://localhost:27017/blog"
+
 const MONGO_URI =
     process.env.MONGO_URI ||''
 

@@ -2,15 +2,15 @@ import { IPost } from "../models/post.interface"
 
 export interface IIPostRepository {
     create(post: IPost): Promise<IPost>
-    findById(id: string): Promise<IPost | null>
+    findById(postId: string): Promise<IPost | null>
     getUrl(
         fileName: string
     ): Promise<{ presignedUrl: string; fileUrl: string } | null>
     getAllPosts(): Promise<IPost[]>
     getAllUserPosts(userId: string): Promise<IPost[]>
-    update(id: string, iPosIPost: Partial<IPost>): Promise<IPost | null>
-    patch(id: string, iPosIPost: Partial<IPost>): Promise<IPost | null>
-    delete(id: string): Promise<boolean>
+    update(postId: string, iPosIPost: Partial<IPost>): Promise<IPost | null>
+    patch(postId: string, iPosIPost: Partial<IPost>): Promise<IPost | null>
+    delete(postId: string): Promise<boolean>
     getPostsByCategory(categoryId: string): Promise<IPost[]>
     upload(
         fileBuffer: Buffer,

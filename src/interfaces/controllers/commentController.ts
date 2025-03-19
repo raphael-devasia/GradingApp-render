@@ -1,5 +1,7 @@
 import { Request, Response } from "express"
 import { CommentUseCase } from "../../application/usecases/comment.usecase"
+import { HttpStatus } from "../../domain/models/http-status.enum"
+import { ResponseMessage } from "../../domain/models/ResponseMessage.enum"
 
 export class CommentController {
     constructor(private commentUseCase: CommentUseCase) {}
@@ -7,9 +9,15 @@ export class CommentController {
     async createComment(req: Request, res: Response): Promise<void> {
         try {
             const comment = await this.commentUseCase.createComment(req.body)
-            res.status(201).json({ success: true, data: comment })
+            res.status(HttpStatus.CREATED).json({
+                success: true,
+                data: comment,
+            })
         } catch (error: any) {
-            res.status(400).json({ success: false, message: error.message })
+            res.status(HttpStatus.BAD_REQUEST).json({
+                success: false,
+                message: error.message,
+            })
         }
     }
 
@@ -18,40 +26,52 @@ export class CommentController {
             const comments = await this.commentUseCase.getAllCommentsByPost(
                 req.params.postId
             )
-            res.status(200).json({ success: true, data: comments })
+            res.status(HttpStatus.OK).json({ success: true, data: comments })
         } catch (error: any) {
-            res.status(500).json({ success: false, message: error.message })
+            res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+                success: false,
+                message: error.message,
+            })
         }
     }
+
     async getCommentsByUserId(req: Request, res: Response): Promise<void> {
         try {
             const comments = await this.commentUseCase.getCommentByUserId(
                 req.params.userId
             )
-            res.status(200).json({ success: true, data: comments })
+            res.status(HttpStatus.OK).json({ success: true, data: comments })
         } catch (error: any) {
-            res.status(500).json({ success: false, message: error.message })
+            res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+                success: false,
+                message: error.message,
+            })
         }
     }
 
     async deleteComment(req: Request, res: Response): Promise<void> {
+        
+        
         try {
             const isDeleted = await this.commentUseCase.deleteComment(
-                req.params.id
+                req.params.commentId
             )
             if (isDeleted) {
-                res.status(200).json({
+                res.status(HttpStatus.OK).json({
                     success: true,
-                    message: "Comment deleted",
+                    message: ResponseMessage.COMMENT_DELETED,
                 })
             } else {
-                res.status(404).json({
+                res.status(HttpStatus.NOT_FOUND).json({
                     success: false,
-                    message: "Comment not found",
+                    message: ResponseMessage.COMMENT_NOT_FOUND,
                 })
             }
         } catch (error: any) {
-            res.status(500).json({ success: false, message: error.message })
+            res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+                success: false,
+                message: error.message,
+            })
         }
     }
 }

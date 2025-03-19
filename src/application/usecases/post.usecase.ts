@@ -8,8 +8,8 @@ export class PostUseCase {
         return this.postRepository.create(postData)
     }
 
-    async getPostById(id: string): Promise<IPost | null> {
-        return this.postRepository.findById(id)
+    async getPostById(postId: string): Promise<IPost | null> {
+        return this.postRepository.findById(postId)
     }
     async getUrl(
         fileName: string
@@ -22,20 +22,20 @@ export class PostUseCase {
     }
 
     async updatePost(
-        id: string,
+        postId: string,
         postData: Partial<IPost>
     ): Promise<IPost | null> {
-        return this.postRepository.update(id, postData)
+        return this.postRepository.update(postId, postData)
     }
     async patchPost(
-        id: string,
+        postId: string,
         postData: Partial<IPost>
     ): Promise<IPost | null> {
-        return this.postRepository.patch(id, postData)
+        return this.postRepository.patch(postId, postData)
     }
 
-    async deletePost(id: string): Promise<boolean> {
-        return this.postRepository.delete(id)
+    async deletePost(postId: string): Promise<boolean> {
+        return this.postRepository.delete(postId)
     }
 
     async getAllPosts(): Promise<IPost[]> {

@@ -9,4 +9,8 @@ export interface IComment {
     comment: string
     name: string
     email: string
+    parentCommentId?: string | null
+    replies?: IComment[]
+    createdAt: Date
+    updatedAt: Date
 }

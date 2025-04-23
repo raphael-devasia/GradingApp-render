@@ -1,17 +1,21 @@
 import { Request, Response } from "express"
-import { PostUseCase } from "../../application/usecases/post.usecase"
+
 import { HttpStatus } from "../../domain/models/http-status.enum" // Adjust path as needed
 import { CourseMessages } from "../../domain/models/ResponseMessage.enum"
+import { CourseUseCase } from "../../application/usecases/course.usecase";
 
-export class PostController {
-    constructor(private postUseCase: PostUseCase) {}
 
-    async createPost(req: Request, res: Response): Promise<void> {
-        console.log('it reached here',req.body);
+export class CourseController {
+    constructor(private courseUseCase: CourseUseCase) {}
+
+    async createCourse(req: Request, res: Response): Promise<void> {
+        
         
         try {
-            const post = await this.postUseCase.createPost(req.body)
-            res.status(HttpStatus.CREATED).json({ success: true, data: post })
+           
+
+            const course = await this.courseUseCase.createCourse(req.body)
+            res.status(HttpStatus.CREATED).json({ success: true, data: course })
         } catch (error: any) {
             res.status(HttpStatus.BAD_REQUEST).json({
                 success: false,
@@ -20,12 +24,12 @@ export class PostController {
         }
     }
 
-    async getPost(req: Request, res: Response): Promise<void> {
+    async getCourse(req: Request, res: Response): Promise<void> {
         
         try {
-            const post = await this.postUseCase.getPostById(req.params.id)
-            if (post) {
-                res.status(HttpStatus.OK).json({ success: true, data: post })
+            const course = await this.courseUseCase.getCourseById(req.params.id)
+            if (course) {
+                res.status(HttpStatus.OK).json({ success: true, data: course })
             } else {
                 res.status(HttpStatus.NOT_FOUND).json({
                     success: false,
@@ -40,16 +44,16 @@ export class PostController {
         }
     }
 
-    async updatePost(req: Request, res: Response): Promise<void> {
+    async updateCourse(req: Request, res: Response): Promise<void> {
         try {
-            const updatedPost = await this.postUseCase.updatePost(
+            const updatedCourse = await this.courseUseCase.updateCourse(
                 req.params.id,
                 req.body
             )
-            if (updatedPost) {
+            if (updatedCourse) {
                 res.status(HttpStatus.OK).json({
                     success: true,
-                    data: updatedPost,
+                    data: updatedCourse,
                 })
             } else {
                 res.status(HttpStatus.NOT_FOUND).json({
@@ -65,16 +69,16 @@ export class PostController {
         }
     }
 
-    async patchPost(req: Request, res: Response): Promise<void> {
+    async patchCourse(req: Request, res: Response): Promise<void> {
         try {
-            const updatedPost = await this.postUseCase.patchPost(
+            const updatedCourse = await this.courseUseCase.patchCourse(
                 req.params.id,
                 req.body
             )
-            if (updatedPost) {
+            if (updatedCourse) {
                 res.status(HttpStatus.OK).json({
                     success: true,
-                    data: updatedPost,
+                    data: updatedCourse,
                 })
             } else {
                 res.status(HttpStatus.NOT_FOUND).json({
@@ -90,9 +94,9 @@ export class PostController {
         }
     }
 
-    async deletePost(req: Request, res: Response): Promise<void> {
+    async deleteCourse(req: Request, res: Response): Promise<void> {
         try {
-            const isDeleted = await this.postUseCase.deletePost(req.params.id)
+            const isDeleted = await this.courseUseCase.deleteCourse(req.params.id)
             if (isDeleted) {
                 res.status(HttpStatus.OK).json({
                     success: true,
@@ -112,10 +116,10 @@ export class PostController {
         }
     }
 
-    async getAllPosts(req: Request, res: Response): Promise<void> {
+    async getAllCourses(req: Request, res: Response): Promise<void> {
         try {
-            const posts = await this.postUseCase.getAllPosts()
-            res.status(HttpStatus.OK).json({ success: true, data: posts })
+            const courses = await this.courseUseCase.getAllCourses()
+            res.status(HttpStatus.OK).json({ success: true, data: courses })
         } catch (error: any) {
             res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
                 success: false,
@@ -124,11 +128,11 @@ export class PostController {
         }
     }
 
-    async getAllUserPosts(req: Request, res: Response): Promise<void> {
+    async getAllUserCourses(req: Request, res: Response): Promise<void> {
         try {
-            const userId = req.params.id
-            const posts = await this.postUseCase.getAllUserPosts(userId)
-            res.status(HttpStatus.OK).json({ success: true, data: posts })
+            const userId = req.params.userId
+            const courses = await this.courseUseCase.getAllUserCourses(userId)
+            res.status(HttpStatus.OK).json({ success: true, data: courses })
         } catch (error: any) {
             res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
                 success: false,
@@ -137,44 +141,6 @@ export class PostController {
         }
     }
 
-    async uploadImage(req: Request, res: Response): Promise<void> {
-        console.log(req.file)
-        try {
-            const file = req.file
-            if (!file) {
-                res.status(HttpStatus.BAD_REQUEST).json({
-                    error: CourseMessages.NO_FILE,
-                })
-            } else {
-                const imageUrl = await this.postUseCase.uploadImage(
-                    file.buffer,
-                    file.originalname,
-                    file.mimetype
-                )
-                res.status(HttpStatus.OK).json({ imageUrl })
-            }
-        } catch (error: any) {
-            res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
-                error: error.message,
-            })
-        }
-    }
+    
 
-    async getPresignedUrl(req: Request, res: Response): Promise<void> {
-        try {
-            const fileName = req.query.fileName as string
-            const url = await this.postUseCase.getUrl(fileName)
-            console.log(url)
-            res.status(HttpStatus.OK).json({
-                success: true,
-                presignedUrl: url?.presignedUrl,
-                fileUrl: url?.fileUrl,
-            })
-        } catch (error: any) {
-            res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
-                success: false,
-                message: error.message,
-            })
-        }
     }
-}

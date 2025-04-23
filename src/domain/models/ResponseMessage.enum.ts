@@ -10,10 +10,18 @@ export enum AuthMessages {
     INVALID_TOKEN = "Invalid Token",
 }
 
-export enum PostMessages {
-    POST_CREATED = "Post created successfully",
-    POST_DELETED = "Post deleted",
-    NOT_FOUND = "Post not found",
+export enum CourseMessages {
+    COURSE_CREATED = "Course created successfully",
+    COURSE_DELETED = "Course deleted",
+    NOT_FOUND = "Course not found",
+    NO_FILE = "No file provided",
+    SERVER_ERROR = "Internal server error",
+}
+
+export enum AssignmentMessages {
+    ASSIGNMENT_CREATED = "Assignment created successfully",
+    ASSIGNMENT_DELETED = "Assignment deleted",
+    NOT_FOUND = "Assignment not found",
     NO_FILE = "No file provided",
     SERVER_ERROR = "Internal server error",
 }

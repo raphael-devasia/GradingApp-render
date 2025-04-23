@@ -3,7 +3,12 @@ import jwt from "jsonwebtoken"
 import { HttpStatus } from "../../domain/models/http-status.enum"
 import { AuthMessages } from "../../domain/models/ResponseMessage.enum"
 
-// Middleware to check the authorization
+interface JwtPayload {
+    id: string
+    email: string
+}
+
+// Middleware to check authorization and attach userId
 const authorize = (req: Request, res: Response, next: NextFunction): void => {
     const token = req.header("Authorization")?.replace("Bearer ", "")
 
@@ -11,20 +16,38 @@ const authorize = (req: Request, res: Response, next: NextFunction): void => {
         res.status(HttpStatus.UNAUTHORIZED).send({
             message: AuthMessages.NO_TOKEN,
         })
-    } else {
-        try {
-            
-            // Verify the token using your secret key
-            const decoded = jwt.verify(token, process.env.JWT_SECRET || "")
+        return
+    }
 
-            next()
-        } catch (error) {
-            console.log('authorization error');
-            
-            res.status(HttpStatus.BAD_REQUEST).send({
-                message: AuthMessages.INVALID_TOKEN,
-            })
-        }
+    try {
+        // Verify the token using the secret key
+        const decoded = jwt.verify(
+            token,
+            process.env.JWT_SECRET || ""
+        ) as JwtPayload
+
+        // Attach userId to req.body
+
+         if (req.method === "GET") {
+             // Add to params (can be read in GET routes)
+             console.log(' th euser id is ',decoded.id);
+             
+             req.params.userId = decoded.id
+         } else {
+             // Add to body (POST, PUT, DELETE, etc.)
+             req.body.userId = decoded.id
+         }
+
+        
+        
+        
+
+        next()
+    } catch (error) {
+        console.error("Authorization error:", error)
+        res.status(HttpStatus.BAD_REQUEST).send({
+            message: AuthMessages.INVALID_TOKEN,
+        })
     }
 }
 

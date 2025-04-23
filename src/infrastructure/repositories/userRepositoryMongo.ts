@@ -28,8 +28,6 @@ export class UserRepositoryMongo implements IUserRepository {
         }
     }
 
-   
-    
     async login(email: string, password: string): Promise<IUser | null> {
         try {
             // Find user by email
@@ -47,6 +45,30 @@ export class UserRepositoryMongo implements IUserRepository {
         } catch (error) {
             console.error("Error fetching user by email:", error)
             throw new Error("User is not registered")
+        }
+    }
+    async updatePlan(
+        plan: string,
+        billingCycle: string,
+        userId: string
+    ): Promise<IUser> {
+        try {
+            const user = await User.findById(userId)
+            if (!user) {
+                throw new Error("User not found")
+            }
+
+            user.subscription = {
+                ...user.subscription,
+                plan,
+                billingCycle,
+            }
+
+            const updatedUser = await user.save()
+            return updatedUser
+        } catch (error: any) {
+            console.error("Error updating user plan:", error.message || error)
+            throw new Error(error.message || "Error updating user plan")
         }
     }
 }

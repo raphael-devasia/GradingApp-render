@@ -13,6 +13,9 @@ const authorize = (req: Request, res: Response, next: NextFunction): void => {
     const token = req.header("Authorization")?.replace("Bearer ", "")
 
     if (!token) {
+
+        
+        
         res.status(HttpStatus.UNAUTHORIZED).send({
             message: AuthMessages.NO_TOKEN,
         })
@@ -20,6 +23,7 @@ const authorize = (req: Request, res: Response, next: NextFunction): void => {
     }
 
     try {
+       
         // Verify the token using the secret key
         const decoded = jwt.verify(
             token,
@@ -28,14 +32,17 @@ const authorize = (req: Request, res: Response, next: NextFunction): void => {
 
         // Attach userId to req.body
 
+
          if (req.method === "GET") {
              // Add to params (can be read in GET routes)
              console.log(' th euser id is ',decoded.id);
              
              req.params.userId = decoded.id
+             
          } else {
              // Add to body (POST, PUT, DELETE, etc.)
              req.body.userId = decoded.id
+             
          }
 
         

@@ -2,26 +2,35 @@ import bcrypt from "bcrypt" // for password hashing
 import jwt from "jsonwebtoken" // for JWT token generation
 import { IUserRepository } from "../../domain/repositories/userRepository.interface"
 import { IUser } from "../../domain/models/user.interface"
-import { ILoginResponse } from "../../domain/models/loginResponse.interface"
+import { ILoginResponse, IUpdatePlanResponse } from "../../domain/models/loginResponse.interface"
 
 export class UserUseCase {
     constructor(private userRepository: IUserRepository) {}
 
     async createUser(userData: IUser): Promise<IUser> {
-        // Business logic for creating a user
+        // Validate inputs
+        if (!userData.name || !userData.email || !userData.password) {
+            throw new Error("Name, email, and password are required")
+        }
+        if (userData.password.length < 8) {
+            throw new Error("Password must be at least 8 characters")
+        }
+
+        // Check if user exists
         const existingUser = await this.userRepository.findByEmail(
             userData.email
         )
         if (existingUser) {
             throw new Error("Email already in use")
         }
-        // Hash the password before saving
-        const hashedPassword = await bcrypt.hash(userData.password, 10) // 10 is the salt rounds
 
-        // Replace the password in userData with the hashed password
+        // Hash password
+        const hashedPassword = await bcrypt.hash(userData.password, 10)
         userData.password = hashedPassword
 
-        return this.userRepository.create(userData)
+        // Create user
+        const user = await this.userRepository.create(userData)
+        return user
     }
 
     async getUserByEmail(email: string): Promise<IUser | null> {
@@ -65,5 +74,33 @@ export class UserUseCase {
 
         // Return the login response
         return loginResponse
+    }
+
+    async updatePlan(
+        plan: string,
+        billingCycle: string,
+        userId: string
+    ): Promise<IUpdatePlanResponse> {
+        try {
+            // Validate inputs
+            const validPlans = ["educator", "department", "institution"]
+            const validBillingCycles = ["monthly", "yearly"]
+            if (!validPlans.includes(plan)) {
+                throw new Error("Invalid plan")
+            }
+            if (!validBillingCycles.includes(billingCycle)) {
+                throw new Error("Invalid billing cycle")
+            }
+
+            // Update user in repository
+            const user = await this.userRepository.updatePlan(
+                plan,
+                billingCycle,
+                userId
+            )
+            return { success: true, user }
+        } catch (error: any) {
+            throw new Error(error.message || "Failed to update plan")
+        }
     }
 }

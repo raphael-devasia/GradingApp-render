@@ -1,7 +1,7 @@
 {
     "name": "blog-backend",
     "version": "1.0.0",
-    "main": "index.js",
+    "main": "dist/server.js",
     "scripts": {
         "start": "node dist/server.js",
         "dev": "nodemon src/server.ts",
@@ -11,10 +11,7 @@
     "keywords": [],
     "author": "",
     "license": "ISC",
-    "ignore": [
-        "node_modules",
-        "dist"
-    ],
+    
     "dependencies": {
         "@aws-sdk/s3-request-presigner": "^3.733.0",
         "aws-sdk": "^2.1692.0",

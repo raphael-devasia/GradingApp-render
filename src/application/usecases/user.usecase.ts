@@ -107,6 +107,7 @@ export class UserUseCase {
 
         // Generate JWT token
         const status = user.subscription?.status === "active"
+        const classRoom = await this.classroomRepository.findByTeacherId(user._id)
         const token = jwt.sign(
             { id: user._id, sub_active: status },
             process.env.JWT_SECRET || "", // Secret key for signing the JWT token
@@ -121,7 +122,7 @@ export class UserUseCase {
             userId: user._id.toString(), // Convert MongoDB ObjectID to string
             email: user.email,
             name: user.name, // Assuming user has firstName field
-            
+            classroomId:classRoom?.id,
         }
 
         // Return the login response

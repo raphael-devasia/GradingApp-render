@@ -11,6 +11,8 @@ interface JwtPayload {
 // Middleware to check authorization and attach userId
 const authorize = (req: Request, res: Response, next: NextFunction): void => {
     const token = req.header("Authorization")?.replace("Bearer ", "")
+    
+    
 
     if (!token) {
 
@@ -32,14 +34,16 @@ const authorize = (req: Request, res: Response, next: NextFunction): void => {
 
         // Attach userId to req.body
 
-
+        
+        
          if (req.method === "GET") {
              // Add to params (can be read in GET routes)
-             console.log(' th euser id is ',decoded.id);
+             
              
              req.params.userId = decoded.id
              
          } else {
+            console.log(" th euser id is ", decoded)
              // Add to body (POST, PUT, DELETE, etc.)
              req.body.userId = decoded.id
              

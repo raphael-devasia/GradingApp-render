@@ -10,5 +10,11 @@ authRoutes.post("/update-plan",authorize, (req, res) =>
     userController.updatePlan(req, res)
 )
 authRoutes.post("/login", (req, res) => userController.loginUser(req, res))
+authRoutes.post("/oauth", (req, res) => userController.authOAuth(req, res))
+
+
+
+
+
 
 export default authRoutes

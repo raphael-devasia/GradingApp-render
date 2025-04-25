@@ -6,8 +6,8 @@ export interface ILoginResponse {
     expiresIn: number 
     userId?: string 
     email?: string 
-    firstName?: string 
-    lastName?: string 
+    name?: string 
+    
 }
 
 export interface IUpdatePlanResponse {

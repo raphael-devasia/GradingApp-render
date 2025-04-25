@@ -1,114 +1,175 @@
-import mongoose from "mongoose";
-import { IClassroomRepository } from "../../domain/repositories/classroomRepository";
-
-import { IUser } from "../../domain/models/user.interface";
-import { IClassroom } from "../../domain/models/classroom.model";
-import ClassroomModel from '../db/models/classRoom.model'
-import UserModel from '../db/models/user.model'
-
+import mongoose, { Types } from "mongoose"
+import { IClassroomRepository } from "../../domain/repositories/classroomRepository"
+import { IClassroom } from "../../domain/models/classroom.model"
+import { IStudent } from "../../domain/models/students.model"
+import { ICoTeacher } from "../../domain/models/co-teacher.model"
+import ClassroomModel from "../db/models/classRoom.model"
+import StudentModel from "../db/models/students.model"
+import CoTeacherModel from "../db/models/co-teachers.model"
 
 export class ClassroomRepositoryMongo implements IClassroomRepository {
-  async findClassrooms(teacherId: string): Promise<IClassroom[]> {
-    try {
-      if (!mongoose.Types.ObjectId.isValid(teacherId)) {
-        throw new Error("Invalid teacher ID format");
-      }
-      const classrooms = await ClassroomModel.find({
-        $or: [{ teacherId }, { coTeacherIds: teacherId }],
-      }).exec();
-      return classrooms.map((classroom) => classroom.toJSON() as IClassroom);
-    } catch (error: any) {
-      throw new Error(`Failed to fetch classrooms: ${error.message}`);
+    async createClassRoom(teacherId: string): Promise<IClassroom> {
+        try {
+            const classroom = new ClassroomModel({
+                teacherId: new Types.ObjectId(teacherId),
+                coTeacherIds: [],
+                studentIds: [],
+            })
+            const savedClassroom = await classroom.save()
+            return savedClassroom.toJSON() as IClassroom
+        } catch (error: any) {
+            throw new Error(`Failed to create classroom: ${error.message}`)
+        }
     }
-  }
 
-  async addStudent(classroomId: string, student: Partial<IUser>): Promise<IUser> {
-    try {
-      if (!mongoose.Types.ObjectId.isValid(classroomId)) {
-        throw new Error("Invalid classroom ID format");
-      }
-      // Create or find student
-      let user = await UserModel.findOne({ email: student.email });
-      if (!user) {
-        user = new UserModel({ ...student, role: "student", status: "active" });
-        await user.save();
-      } else if (user.role !== "student") {
-        throw new Error("User is not a student");
-      }
-      // Add student to classroom
-      const classroom = await ClassroomModel.findById(classroomId);
-      if (!classroom) {
-        throw new Error("Classroom not found");
-      }
-      if (!classroom.studentIds.includes(user._id)) {
-        classroom.studentIds.push(user._id);
-        await classroom.save();
-      }
-      return user.toJSON() as IUser;
-    } catch (error: any) {
-      throw new Error(`Failed to add student: ${error.message}`);
+    async findClassrooms(teacherId: string): Promise<IClassroom[] | null> {
+        try {
+            if (!mongoose.Types.ObjectId.isValid(teacherId)) {
+                throw new Error("Invalid teacher ID format")
+            }
+            const classrooms = await ClassroomModel.find({
+                $or: [{ teacherId }, { coTeacherIds: teacherId }],
+            }).exec()
+            return classrooms.map(
+                (classroom) => classroom.toJSON() as IClassroom
+            )
+        } catch (error: any) {
+            throw new Error(`Failed to fetch classrooms: ${error.message}`)
+        }
     }
-  }
 
-  async addCoTeacher(classroomId: string, coTeacher: Partial<IUser>): Promise<IUser> {
-    try {
-      if (!mongoose.Types.ObjectId.isValid(classroomId)) {
-        throw new Error("Invalid classroom ID format");
-      }
-      // Create or find co-teacher
-      let user = await UserModel.findOne({ email: coTeacher.email });
-      if (!user) {
-        user = new UserModel({ ...coTeacher, role: "teacher", status: "pending" });
-        await user.save();
-      } else if (user.role !== "teacher") {
-        throw new Error("User is not a teacher");
-      }
-      // Add co-teacher to classroom
-      const classroom = await ClassroomModel.findById(classroomId);
-      if (!classroom) {
-        throw new Error("Classroom not found");
-      }
-      if (!classroom.coTeacherIds.includes(user._id)) {
-        classroom.coTeacherIds.push(user._id);
-        await classroom.save();
-      }
-      return user.toJSON() as IUser;
-    } catch (error: any) {
-      throw new Error(`Failed to add co-teacher: ${error.message}`);
+    async addStudent(
+        classroomId: string,
+        student: Partial<IStudent>
+    ): Promise<IStudent> {
+        try {
+            if (!mongoose.Types.ObjectId.isValid(classroomId)) {
+                throw new Error("Invalid classroom ID format")
+            }
+            let studentDoc = await StudentModel.findOne({
+                email: student.email,
+            })
+            if (!studentDoc) {
+                studentDoc = new StudentModel({
+                    ...student,
+                    classes: student.classes || ["all"],
+                })
+                await studentDoc.save()
+            }
+            const classroom = await ClassroomModel.findById(classroomId)
+            if (!classroom) {
+                throw new Error("Classroom not found")
+            }
+            const studentIdStr = studentDoc._id.toString()
+            if (!classroom.studentIds.includes(studentIdStr)) {
+                classroom.studentIds.push(studentIdStr)
+                await classroom.save()
+            }
+            return studentDoc.toJSON() as IStudent
+        } catch (error: any) {
+            console.error("Error in addStudent:", error.message)
+            throw new Error(`Failed to add student: ${error.message}`)
+        }
     }
-  }
 
-  async getStudents(classroomId: string): Promise<IUser[]> {
-    try {
-      if (!mongoose.Types.ObjectId.isValid(classroomId)) {
-        throw new Error("Invalid classroom ID format");
-      }
-      const classroom = await ClassroomModel.findById(classroomId)
-        .populate("studentIds", "name email role status")
-        .exec();
-      if (!classroom) {
-        throw new Error("Classroom not found");
-      }
-      return (classroom.studentIds as any[]).map((user) => user.toJSON() as IUser);
-    } catch (error: any) {
-      throw new Error(`Failed to fetch students: ${error.message}`);
+    async addCoTeacher(
+        classroomId: string,
+        coTeacher: Partial<ICoTeacher>
+    ): Promise<ICoTeacher> {
+        try {
+            if (!mongoose.Types.ObjectId.isValid(classroomId)) {
+                throw new Error("Invalid classroom ID format")
+            }
+            let coTeacherDoc = await CoTeacherModel.findOne({
+                email: coTeacher.email,
+            })
+            if (!coTeacherDoc) {
+                coTeacherDoc = new CoTeacherModel({
+                    ...coTeacher,
+                    classes: coTeacher.classes || ["all"],
+                    status: coTeacher.status || "pending",
+                })
+                await coTeacherDoc.save()
+            }
+            const classroom = await ClassroomModel.findById(classroomId)
+            if (!classroom) {
+                throw new Error("Classroom not found")
+            }
+            const coTeacherIdStr = coTeacherDoc._id.toString()
+            if (!classroom.coTeacherIds.includes(coTeacherIdStr)) {
+                classroom.coTeacherIds.push(coTeacherIdStr)
+                await classroom.save()
+            }
+            return coTeacherDoc.toJSON() as ICoTeacher
+        } catch (error: any) {
+            console.error("Error in addCoTeacher:", error.message)
+            throw new Error(`Failed to add co-teacher: ${error.message}`)
+        }
     }
-  }
 
-  async getCoTeachers(classroomId: string): Promise<IUser[]> {
-    try {
-      if (!mongoose.Types.ObjectId.isValid(classroomId)) {
-        throw new Error("Invalid classroom ID format");
-      }
-      const classroom = await ClassroomModel.findById(classroomId)
-        .populate("coTeacherIds", "name email role status")
-        .exec();
-      if (!classroom) {
-        throw new Error("Classroom not found");
-      }
-      return (classroom.coTeacherIds as any[]).map((user) => user.toJSON() as IUser);
-    } catch (error: any) {
-      throw new Error(`Failed to fetch co-teachers: ${error.message}`);
+    async getStudents(classroomId: string): Promise<IStudent[]> {
+        try {
+            if (!mongoose.Types.ObjectId.isValid(classroomId)) {
+                throw new Error("Invalid classroom ID format")
+            }
+            const classroom = await ClassroomModel.findById(classroomId)
+                .populate(
+                    "studentIds",
+                    "name email classes assignments createdAt updatedAt"
+                )
+                .exec()
+            if (!classroom) {
+                throw new Error("Classroom not found")
+            }
+            return (classroom.studentIds as any[]).map(
+                (student) => student.toJSON() as IStudent
+            )
+        } catch (error: any) {
+            throw new Error(`Failed to fetch students: ${error.message}`)
+        }
     }
-  }
+
+    async getCoTeachers(classroomId: string): Promise<ICoTeacher[]> {
+        try {
+            if (!mongoose.Types.ObjectId.isValid(classroomId)) {
+                throw new Error("Invalid classroom ID format")
+            }
+            const classroom = await ClassroomModel.findById(classroomId)
+                .populate(
+                    "coTeacherIds",
+                    "name email classes status createdAt updatedAt"
+                )
+                .exec()
+            if (!classroom) {
+                throw new Error("Classroom not found")
+            }
+            return (classroom.coTeacherIds as any[]).map(
+                (coTeacher) => coTeacher.toJSON() as ICoTeacher
+            )
+        } catch (error: any) {
+            throw new Error(`Failed to fetch co-teachers: ${error.message}`)
+        }
+    }
+
+    async findByTeacherId(teacherId: string): Promise<IClassroom | null> {
+        try {
+            if (!Types.ObjectId.isValid(teacherId)) {
+                throw new Error("Invalid teacherId")
+            }
+            const classroom = await ClassroomModel.findOne({
+                teacherId: new Types.ObjectId(teacherId),
+            })
+            if (!classroom) return null
+            return {
+                id: classroom.id,
+                teacherId: classroom.teacherId.toString(),
+                coTeacherIds: classroom.coTeacherIds.map((id) => id.toString()),
+                studentIds: classroom.studentIds.map((id) => id.toString()),
+                createdAt: classroom.createdAt,
+                updatedAt: classroom.updatedAt,
+            }
+        } catch (error: any) {
+            throw new Error(`Failed to find classroom: ${error.message}`)
+        }
+    }
 }

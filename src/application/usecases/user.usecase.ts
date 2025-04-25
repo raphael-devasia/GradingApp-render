@@ -4,16 +4,60 @@ import { IUserRepository } from "../../domain/repositories/userRepository.interf
 import { IUser } from "../../domain/models/user.interface"
 import { ILoginResponse, IUpdatePlanResponse } from "../../domain/models/loginResponse.interface"
 
-export class UserUseCase {
-    constructor(private userRepository: IUserRepository) {}
+import { IClassroomRepository } from "../../domain/repositories/classroomRepository"
 
-    async createUser(userData: IUser): Promise<IUser> {
-        // Validate inputs
-        if (!userData.name || !userData.email || !userData.password) {
-            throw new Error("Name, email, and password are required")
+export class UserUseCase {
+    constructor(
+        private userRepository: IUserRepository,
+        private classroomRepository: IClassroomRepository
+    ) {}
+
+    // async createUser(userData: IUser): Promise<IUser> {
+    //     // Validate inputs
+    //     if (!userData.name || !userData.email || !userData.password) {
+    //         throw new Error("Name, email, and password are required")
+    //     }
+    //     if (userData.password.length < 8) {
+    //         throw new Error("Password must be at least 8 characters")
+    //     }
+
+    //     // Check if user exists
+    //     const existingUser = await this.userRepository.findByEmail(
+    //         userData.email
+    //     )
+    //     if (existingUser) {
+    //         throw new Error("Email already in use")
+    //     }
+
+    //     // Hash password
+    //     const hashedPassword = await bcrypt.hash(userData.password, 10)
+    //     userData.password = hashedPassword
+
+    //     // Create user
+    //     const user = await this.userRepository.create(userData)
+    //     return user
+    // }
+    async createUser(
+        userData: Partial<IUser>
+    ): Promise<{ user: IUser; classroomId: string }> {
+        // Validate required fields
+        if (!userData.name || !userData.email) {
+            throw new Error("Name and email are required")
         }
-        if (userData.password.length < 8) {
-            throw new Error("Password must be at least 8 characters")
+
+        // Require password for non-OAuth users
+        if (!userData.googleId && !userData.microsoftId) {
+            if (!userData.password) {
+                throw new Error("Password is required for non-OAuth users")
+            }
+            if (userData.password.length < 8) {
+                throw new Error("Password must be at least 8 characters")
+            }
+            // Hash password
+            userData.password = await bcrypt.hash(userData.password, 10)
+        } else {
+            // Ensure no password is set for OAuth users
+            userData.password = undefined
         }
 
         // Check if user exists
@@ -24,13 +68,20 @@ export class UserUseCase {
             throw new Error("Email already in use")
         }
 
-        // Hash password
-        const hashedPassword = await bcrypt.hash(userData.password, 10)
-        userData.password = hashedPassword
-
         // Create user
         const user = await this.userRepository.create(userData)
-        return user
+
+        
+
+        // Create classroom
+        const classroom = await this.classroomRepository.createClassRoom(
+            user._id!.toString()
+        )
+
+        if (!classroom.id) {
+            throw new Error("Failed to create ClassRoom: No _id assigned")
+        }
+        return { user, classroomId: classroom.id }
     }
 
     async getUserByEmail(email: string): Promise<IUser | null> {
@@ -55,8 +106,9 @@ export class UserUseCase {
         }
 
         // Generate JWT token
+        const status = user.subscription?.status === "active"
         const token = jwt.sign(
-            { id: user._id, email: user.email }, // Payload: Include user ID and email
+            { id: user._id, sub_active: status },
             process.env.JWT_SECRET || "", // Secret key for signing the JWT token
             { expiresIn: "1h" } // Expiry time for the token
         )
@@ -68,8 +120,8 @@ export class UserUseCase {
             expiresIn: 3600, // Token expiration time in seconds
             userId: user._id.toString(), // Convert MongoDB ObjectID to string
             email: user.email,
-            firstName: user.firstName, // Assuming user has firstName field
-            lastName: user.lastName, // Assuming user has lastName field
+            name: user.name, // Assuming user has firstName field
+            
         }
 
         // Return the login response
@@ -102,5 +154,39 @@ export class UserUseCase {
         } catch (error: any) {
             throw new Error(error.message || "Failed to update plan")
         }
+    }
+    async updateUser(
+        userId: string,
+        updateData: Partial<IUser>
+    ): Promise<IUser> {
+        // If updating email, check for uniqueness
+        if (updateData.email) {
+            const existingUser = await this.userRepository.findByEmail(
+                updateData.email
+            )
+            if (existingUser && existingUser._id!.toString() !== userId) {
+                throw new Error("Email is already in use")
+            }
+        }
+
+        // Remove fields that should not be updated
+        const allowedUpdates: Partial<IUser> = { ...updateData }
+        delete allowedUpdates._id // Prevent updating _id
+        delete allowedUpdates.createdAt // Prevent updating createdAt
+        delete allowedUpdates.updatedAt // Prevent updating updatedAt
+        if (allowedUpdates.password) {
+            throw new Error("Password updates are not allowed via this method")
+        }
+
+        // Update user in repository
+        const updatedUser = await this.userRepository.update(
+            userId,
+            allowedUpdates
+        )
+        if (!updatedUser) {
+            throw new Error("User not found")
+        }
+
+        return updatedUser
     }
 }

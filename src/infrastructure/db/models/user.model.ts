@@ -1,22 +1,25 @@
 import mongoose, { Schema, Document } from "mongoose"
 import { IUser } from "../../../domain/models/user.interface"
-import { ISubscription } from "../../../domain/models/subscription.interface"
 
-const subscriptionSchema: Schema = new Schema<ISubscription>({
-    plan: { type: String },
-    billingCycle: { type: String },
-    stripeCustomerId: { type: String },
-    stripeSubscriptionId: { type: String },
-    status: { type: String },
-})
+
+
 
 const userSchema = new Schema({
     name: { type: String, required: true },
-    
+
     email: { type: String, required: true, unique: true },
     password: { type: String, required: false },
-    
-    subscription: { type: subscriptionSchema, default: {} },
+    classroomId: { type: String, required: false },
+    googleId: { type: String, unique: true, sparse: true },
+    microsoftId: { type: String, unique: true, sparse: true },
+
+    subscription: {
+        plan: String,
+        billingCycle: String,
+        stripeCustomerId: String,
+        stripeSubscriptionId: String,
+        status: String,
+    },
     createdAt: { type: Date, default: Date.now },
 })
 

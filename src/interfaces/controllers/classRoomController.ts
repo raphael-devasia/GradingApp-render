@@ -22,7 +22,9 @@ export class ClassRoomController {
             const classrooms = await this.classroomUseCase.findClassrooms(
                 teacherId
             )
-            res.status(HttpStatus.OK).json(classrooms)
+            
+            
+            res.status(HttpStatus.OK).json({success: true,data:classrooms})
         } catch (error: any) {
             res.status(HttpStatus.BAD_REQUEST).json({
                 success: false,
@@ -80,13 +82,17 @@ export class ClassRoomController {
     async getStudents(req: Request, res: Response): Promise<void> {
         try {
             const { classroomId } = req.query
+            console.log('the classroom id is ',classroomId);
+            
             if (!classroomId || typeof classroomId !== "string") {
                 throw new Error("Classroom ID is required")
             }
             const students = await this.classroomUseCase.getStudents(
                 classroomId
             )
-            res.status(HttpStatus.OK).json(students)
+            
+            
+            res.status(HttpStatus.OK).json({success:true,data:students})
         } catch (error: any) {
             res.status(HttpStatus.BAD_REQUEST).json({
                 success: false,

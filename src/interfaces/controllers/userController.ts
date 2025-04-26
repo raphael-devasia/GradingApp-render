@@ -180,7 +180,12 @@ export class UserController {
 
                     // Generate token for signup
                     const token = jwt.sign(
-                        { id: newUser._id, sub_active: false, type: "signup" },
+                        {
+                            id: newUser._id,
+                            email: email,
+                            type: "signup",
+                            sub_active: false,
+                        },
                         process.env.JWT_SECRET!,
                         { expiresIn: "1h" }
                     )

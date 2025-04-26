@@ -179,10 +179,10 @@ export class UserController {
                     console.log(`Registered new user: ${email} via ${provider}`)
 
                     // Generate token for signup
-                    const token = generateToken(
-                        newUser._id,
-                        newUser.subscription?.status === "active",
-                        "signup"
+                    const token = jwt.sign(
+                        { id: newUser._id, sub_active: false, type: "signup" },
+                        process.env.JWT_SECRET!,
+                        { expiresIn: "1h" }
                     )
 
                     res.status(HttpStatus.OK).json({
